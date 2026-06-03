@@ -1,0 +1,28 @@
+server:
+  host: 127.0.0.1
+  port: 8080
+  mode: debug
+
+mysql:
+  host: 127.0.0.1
+  port: 3306
+  user: root
+  password: 123456
+  dbname: it_asset_db
+
+redis:
+  host: 127.0.0.1
+  port: 6379
+  password: ""
+  db: 0
+
+jwt:
+  secret: "it-asset-system-secret-key"
+  expire: 24h
+
+log:
+  level: "info"
+  filename: "logs/app.log"
+  max_size: 50
+  max_age: 30
+  max_backups: 5

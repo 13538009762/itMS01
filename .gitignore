@@ -1,0 +1,28 @@
+# Root .gitignore for itMS project
+
+# Node/Vite build artifacts
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Go build artifacts and executables
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+it-asset-system/logs/
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+
+# Temporary Office Files
+~$*
