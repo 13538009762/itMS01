@@ -121,11 +121,29 @@ func SeedDatabase() {
 		{"role_2", "/api/v1/admin/apply/list", "GET"},
 		{"role_2", "/api/v1/admin/repair/list", "GET"},
 		{"role_2", "/api/v1/admin/categories", "GET"},
+		{"role_2", "/api/v1/admin/asset", "DELETE"},
+		// 系统管理员专属权限 (不被IT管理员继承)
+		{"role_3", "/api/v1/admin/users", "GET"},
+		{"role_3", "/api/v1/admin/users", "POST"},
+		{"role_3", "/api/v1/admin/users", "PUT"},
+		{"role_3", "/api/v1/admin/users", "DELETE"},
+	}
+
+	// 清理旧的 role_2 用户管理权限 (以防数据库中残留)
+	legacyUserPolicies := [][]string{
 		{"role_2", "/api/v1/admin/users", "GET"},
 		{"role_2", "/api/v1/admin/users", "POST"},
 		{"role_2", "/api/v1/admin/users", "PUT"},
-		{"role_2", "/api/v1/admin/asset", "DELETE"},
 		{"role_2", "/api/v1/admin/users", "DELETE"},
+	}
+	for _, p := range legacyUserPolicies {
+		has, _ := Enforcer.HasPolicy(p[0], p[1], p[2])
+		if has {
+			_, err := Enforcer.RemovePolicy(p[0], p[1], p[2])
+			if err != nil {
+				Logger.Error(fmt.Sprintf("Failed to remove legacy policy %v: %v", p, err))
+			}
+		}
 	}
 
 	for _, policy := range policies {

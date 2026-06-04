@@ -26,7 +26,7 @@
             <el-icon><Tool /></el-icon>
             <span>资产报修</span>
           </el-menu-item>
-          <el-menu-item v-if="user.role_id === 2 || user.role_id === 3" index="/users">
+          <el-menu-item v-if="user.role_id === 3" index="/users">
             <el-icon><User /></el-icon>
             <span>用户管理</span>
           </el-menu-item>
