@@ -54,10 +54,11 @@ func GetAvailableAssets(c *gin.Context) {
 
 // CreateAssetRequest 添加资产请求体
 type CreateAssetRequest struct {
-	BaseNo     string `json:"base_no" binding:"required"`    // 基础编号，如 AST20260601001
-	Name       string `json:"name" binding:"required"`
-	CategoryID uint   `json:"category_id" binding:"required"`
-	Quantity   int    `json:"quantity"` // 数量，默认 1，将生成 Quantity 条独立记录
+	BaseNo       string `json:"base_no" binding:"required"` // 基础编号，如 AST20260601001
+	Name         string `json:"name" binding:"required"`
+	CategoryID   uint   `json:"category_id"`
+	CategoryName string `json:"category_name"` // 动态创建不存在的分类时传入
+	Quantity     int    `json:"quantity"`      // 数量，默认 1，将生成 Quantity 条独立记录
 }
 
 // CreateAsset 批量创建资产单件
@@ -76,13 +77,37 @@ func CreateAsset(c *gin.Context) {
 
 	tx := core.DB.Begin()
 
+	// 动态创建不存在的分类
+	var catID = req.CategoryID
+	if catID == 0 {
+		if req.CategoryName == "" {
+			tx.Rollback()
+			utils.Error(c, 400, "请选择分类或输入新分类名称")
+			return
+		}
+		// 检查同名分类是否已存在
+		var existingCat models.SysCategory
+		if err := tx.Where("category_name = ?", req.CategoryName).First(&existingCat).Error; err == nil {
+			catID = existingCat.ID
+		} else {
+			// 创建新分类
+			newCat := models.SysCategory{CategoryName: req.CategoryName}
+			if err := tx.Create(&newCat).Error; err != nil {
+				tx.Rollback()
+				utils.Error(c, 500, "创建新分类失败: "+err.Error())
+				return
+			}
+			catID = newCat.ID
+		}
+	}
+
 	var created []models.SysAsset
 	for i := 1; i <= req.Quantity; i++ {
 		unit := models.SysAsset{
 			BaseNo:     req.BaseNo,
 			AssetNo:    fmt.Sprintf("%s-%03d", req.BaseNo, i),
 			Name:       req.Name,
-			CategoryID: req.CategoryID,
+			CategoryID: catID,
 			Status:     0,
 		}
 		if err := tx.Create(&unit).Error; err != nil {

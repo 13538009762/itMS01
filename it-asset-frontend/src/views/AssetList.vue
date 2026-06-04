@@ -117,7 +117,14 @@
           <el-input v-model="newAsset.name"></el-input>
         </el-form-item>
         <el-form-item label="资产分类">
-          <el-select v-model="newAsset.category_id" placeholder="请选择资产分类" style="width: 100%;">
+          <el-select
+            v-model="newAsset.category_id"
+            filterable
+            allow-create
+            default-first-option
+            placeholder="请选择或直接输入新分类"
+            style="width: 100%;"
+          >
             <el-option
               v-for="item in categories"
               :key="item.ID"
@@ -261,15 +268,13 @@ const getBatchStatusType = (remaining) => {
 }
 
 const fetchCategories = () => {
-  if (user.value.role_id === 2 || user.value.role_id === 3) {
-    request.get('/admin/categories').then(res => {
-      if (res && res.length > 0) {
-        categories.value = res
-      }
-    }).catch(err => {
-      console.error('获取分类列表失败，使用预设分类:', err)
-    })
-  }
+  request.get('/admin/categories').then(res => {
+    if (res && res.length > 0) {
+      categories.value = res
+    }
+  }).catch(err => {
+    console.error('获取分类列表失败，使用预设分类:', err)
+  })
 }
 
 const fetchAssets = () => {
@@ -354,12 +359,27 @@ const addAsset = () => {
     ElMessage.warning('请填写资产名称')
     return
   }
-  request.post('/admin/asset', newAsset.value).then((res) => {
+  if (!newAsset.value.category_id) {
+    ElMessage.warning('请选择或输入资产分类')
+    return
+  }
+
+  const isNewCategory = typeof newAsset.value.category_id === 'string'
+  const payload = {
+    base_no: newAsset.value.base_no,
+    name: newAsset.value.name,
+    quantity: newAsset.value.quantity,
+    category_id: isNewCategory ? 0 : newAsset.value.category_id,
+    category_name: isNewCategory ? newAsset.value.category_id : ''
+  }
+
+  request.post('/admin/asset', payload).then((res) => {
     const count = Array.isArray(res) ? res.length : 1
     ElMessage.success(`资产添加成功，已创建 ${count} 个单件`)
     showAddDialog.value = false
     newAsset.value = { base_no: '', name: '', category_id: 1, quantity: 1 }
     fetchAssets()
+    fetchCategories() // 重新拉取最新的分类列表
   }).catch(err => {
     ElMessage.error('添加失败: ' + (err.response?.data?.message || err.message))
   })

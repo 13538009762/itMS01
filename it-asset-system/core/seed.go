@@ -112,6 +112,7 @@ func SeedDatabase() {
 		{"role_1", "/api/v1/employee/assets/held", "GET"},
 		{"role_1", "/api/v1/employee/profile", "PUT"},
 		{"role_1", "/api/v1/employee/profile/password", "PUT"},
+		{"role_1", "/api/v1/admin/categories", "GET"},
 		// IT管理员权限
 		{"role_2", "/api/v1/admin/asset", "POST"},
 		{"role_2", "/api/v1/admin/asset", "PUT"},
