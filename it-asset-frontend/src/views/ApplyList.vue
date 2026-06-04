@@ -85,9 +85,9 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 const applyLogs = ref([])
 const applyLoading = ref(false)
 
-// 分页状态 (一个界面最多显示15条数据)
+// 分页状态 (一个界面最多显示12条数据)
 const applyCurrentPage = ref(1)
-const applyPageSize = ref(15)
+const applyPageSize = ref(12)
 
 // 分页截取计算属性
 const displayedApplyLogs = computed(() => {
