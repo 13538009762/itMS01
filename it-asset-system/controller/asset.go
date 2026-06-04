@@ -10,26 +10,14 @@ import (
 )
 
 // GetAvailableAssets 获取资产列表
-// IT管理员/系统管理员：返回全部资产（所有状态）
-// 普通员工：只返回 status=0 的闲置资产
+// 所有角色均返回全部资产，以便前端正确统计总数量和闲置数量
 func GetAvailableAssets(c *gin.Context) {
-	roleIDVal, _ := c.Get("roleID")
-	roleID := roleIDVal.(int)
-
 	var assets []models.SysAsset
 
-	if roleID == 2 || roleID == 3 {
-		// 管理员查看全部资产，按状态升序（闲置优先）再按ID降序
-		if err := core.DB.Order("status ASC, id DESC").Find(&assets).Error; err != nil {
-			utils.Error(c, 500, "Failed to get assets")
-			return
-		}
-	} else {
-		// 员工只看闲置资产
-		if err := core.DB.Where("status = 0").Order("id DESC").Find(&assets).Error; err != nil {
-			utils.Error(c, 500, "Failed to get assets")
-			return
-		}
+	// 统一返回全部资产，按状态升序（闲置优先）再按ID降序
+	if err := core.DB.Order("status ASC, id DESC").Find(&assets).Error; err != nil {
+		utils.Error(c, 500, "Failed to get assets")
+		return
 	}
 
 	// 批量填充持有人姓名：收集所有非零的 user_id，一次性查询对应用户
