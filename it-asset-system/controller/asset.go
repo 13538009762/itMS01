@@ -291,3 +291,47 @@ func GetHeldAssets(c *gin.Context) {
 
 	utils.Success(c, assets)
 }
+
+// DeleteAssetBatch 删除整批资产
+// DELETE /admin/asset/batch?base_no=ASTXXX
+func DeleteAssetBatch(c *gin.Context) {
+	baseNo := c.Query("base_no")
+	if baseNo == "" {
+		utils.Error(c, 400, "Missing base_no")
+		return
+	}
+
+	var batch []models.SysAsset
+	if err := core.DB.Where("base_no = ?", baseNo).Find(&batch).Error; err != nil {
+		utils.Error(c, 500, "Failed to query asset batch")
+		return
+	}
+
+	if len(batch) == 0 {
+		utils.Error(c, 404, "Asset batch not found")
+		return
+	}
+
+	// 校验是否含有非闲置状态的资产
+	for _, a := range batch {
+		if a.Status != 0 {
+			utils.Error(c, 400, fmt.Sprintf("无法删除该批次：单件 %s 处于非闲置状态", a.AssetNo))
+			return
+		}
+	}
+
+	// 开始删除事务
+	tx := core.DB.Begin()
+	if err := tx.Where("base_no = ?", baseNo).Delete(&models.SysAsset{}).Error; err != nil {
+		tx.Rollback()
+		utils.Error(c, 500, "Failed to delete asset batch")
+		return
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		utils.Error(c, 500, "Transaction commit failed")
+		return
+	}
+
+	utils.Success(c, "Batch deleted successfully")
+}

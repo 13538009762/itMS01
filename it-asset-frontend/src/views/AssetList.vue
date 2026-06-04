@@ -2,10 +2,22 @@
   <div class="asset-list">
     <el-card>
       <template #header>
-        <div class="clearfix">
-          <span>资产列表</span>
-          <el-button style="float: right; margin-left: 10px;" type="primary" size="small" @click="fetchAssets">刷新</el-button>
-          <el-button v-if="user.role_id === 2 || user.role_id === 3" style="float: right;" type="success" size="small" @click="showAddDialog = true">添加资产</el-button>
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+          <div style="display: flex; align-items: center; gap: 15px;">
+            <span style="font-weight: bold; font-size: 16px;">资产列表</span>
+            <el-select v-model="filterCategoryID" placeholder="分类筛选" clearable size="small" style="width: 160px;">
+              <el-option
+                v-for="item in categories"
+                :key="item.ID"
+                :label="item.category_name"
+                :value="item.ID"
+              />
+            </el-select>
+          </div>
+          <div>
+            <el-button v-if="user.role_id === 2 || user.role_id === 3" type="success" size="small" @click="showAddDialog = true">添加资产</el-button>
+            <el-button type="primary" size="small" @click="fetchAssets">刷新</el-button>
+          </div>
         </div>
       </template>
 
@@ -70,7 +82,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="220" align="center">
+        <el-table-column label="操作" width="260" align="center">
           <template #default="scope">
             <!-- 员工/管理员：有闲置时可申请领用，后台会自动按单件编号顺序分配闲置设备 -->
             <el-button
@@ -88,6 +100,8 @@
 
             <!-- 管理员：编辑该批次资产属性与数量 -->
             <el-button v-if="user.role_id === 2 || user.role_id === 3" size="small" type="info" @click="openEditDialog(scope.row)">编辑</el-button>
+            <!-- 管理员：删除整批闲置资产 -->
+            <el-button v-if="user.role_id === 2 || user.role_id === 3" size="small" type="danger" @click="handleDeleteBatch(scope.row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -173,6 +187,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 const assets = ref([])
 const loading = ref(false)
 const user = ref(JSON.parse(localStorage.getItem('user') || '{}'))
+const filterCategoryID = ref(null)
 
 const showAddDialog = ref(false)
 const newAsset = ref({
@@ -203,7 +218,13 @@ const categories = ref([
 // 资产按 base_no 批量折叠分组
 const groupedAssets = computed(() => {
   const groups = {}
-  assets.value.forEach(item => {
+  
+  // 分类筛选过滤
+  const filtered = filterCategoryID.value
+    ? assets.value.filter(item => item.category_id === filterCategoryID.value)
+    : assets.value
+
+  filtered.forEach(item => {
     const key = item.base_no || item.asset_no
     if (!groups[key]) {
       groups[key] = {
@@ -369,6 +390,22 @@ const handleDelete = (row) => {
       fetchAssets()
     }).catch(err => {
       ElMessage.error('删除失败: ' + (err.response?.data?.message || err.message))
+    })
+  }).catch(() => {})
+}
+
+const handleDeleteBatch = (row) => {
+  ElMessageBox.confirm(`确定要删除整个资产批次 "${row.name}" 吗？该操作会连带删除该批次下所有闲置的资产单件。`, '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    request.delete('/admin/asset/batch', { params: { base_no: row.base_no } }).then(() => {
+      ElMessage.success('批次删除成功')
+      fetchAssets()
+    }).catch(err => {
+      // 拦截器已报错，此处打印日志即可
+      console.error('删除批次失败:', err)
     })
   }).catch(() => {})
 }

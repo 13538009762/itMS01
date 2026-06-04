@@ -46,6 +46,7 @@ func SetupRouter() *gin.Engine {
 		adminGroup.POST("/users", controller.CreateUser)             // 添加用户
 		adminGroup.PUT("/users", controller.UpdateUser)             // 修改用户 (包括角色、密码等)
 		adminGroup.DELETE("/asset", controller.DeleteAsset)         // 删除资产单件
+		adminGroup.DELETE("/asset/batch", controller.DeleteAssetBatch) // 删除整批资产
 		adminGroup.DELETE("/users", controller.DeleteUser)          // 删除用户
 	}
 

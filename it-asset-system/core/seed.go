@@ -122,6 +122,7 @@ func SeedDatabase() {
 		{"role_2", "/api/v1/admin/repair/list", "GET"},
 		{"role_2", "/api/v1/admin/categories", "GET"},
 		{"role_2", "/api/v1/admin/asset", "DELETE"},
+		{"role_2", "/api/v1/admin/asset/batch", "DELETE"},
 		// 系统管理员专属权限 (不被IT管理员继承)
 		{"role_3", "/api/v1/admin/users", "GET"},
 		{"role_3", "/api/v1/admin/users", "POST"},
