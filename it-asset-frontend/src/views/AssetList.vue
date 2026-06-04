@@ -28,8 +28,15 @@
                 </el-table-column>
                 <el-table-column label="持有人" min-width="150" align="center">
                   <template #default="subScope">
-                    <span v-if="subScope.row.user_name">{{ subScope.row.user_name }}</span>
-                    <span v-else style="color: #909399;">-</span>
+                    <span v-if="user.role_id === 2 || user.role_id === 3">
+                      <span v-if="subScope.row.user_name">{{ subScope.row.user_name }}</span>
+                      <span v-else style="color: #909399;">-</span>
+                    </span>
+                    <span v-else>
+                      <span v-if="subScope.row.user_id === user.id">{{ subScope.row.user_name }}</span>
+                      <span v-else-if="subScope.row.user_name" style="color: #909399;">他人</span>
+                      <span v-else style="color: #909399;">-</span>
+                    </span>
                   </template>
                 </el-table-column>
                 <el-table-column label="操作" width="220" align="center">
