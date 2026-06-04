@@ -59,46 +59,6 @@ func SeedDatabase() {
 		}
 	}
 
-	// 3. Seed Assets if empty — 每台物理设备独立一行，BaseNo 相同的设备属同一批次
-	var assetCount int64
-	DB.Model(&models.SysAsset{}).Count(&assetCount)
-	if assetCount == 0 {
-		Logger.Info("Seeding default individual asset units...")
-
-		var laptopCat models.SysCategory
-		DB.Where("category_name = ?", "笔记本电脑").First(&laptopCat)
-
-		var monitorCat models.SysCategory
-		DB.Where("category_name = ?", "显示器").First(&monitorCat)
-
-		// 定义批次：baseNo, name, categoryID, quantity
-		type batch struct {
-			baseNo     string
-			name       string
-			categoryID uint
-			quantity   int
-		}
-		batches := []batch{
-			{"AST20260601001", "MacBook Pro 16 M3 Max", laptopCat.ID, 2},
-			{"AST20260601002", "ThinkPad T14 Gen 4", laptopCat.ID, 1},
-			{"AST20260601003", "Dell U2723QE 4K Monitor", monitorCat.ID, 3},
-		}
-
-		for _, b := range batches {
-			for i := 1; i <= b.quantity; i++ {
-				unit := models.SysAsset{
-					BaseNo:     b.baseNo,
-					AssetNo:    fmt.Sprintf("%s-%03d", b.baseNo, i),
-					Name:       b.name,
-					CategoryID: b.categoryID,
-					Status:     0,
-				}
-				if err := DB.Create(&unit).Error; err != nil {
-					Logger.Error(fmt.Sprintf("Failed to seed asset unit %s: %v", unit.AssetNo, err))
-				}
-			}
-		}
-	}
 
 	// 4. Seed Casbin Policies
 	Logger.Info("Seeding Casbin policies...")
